@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otolith shape detections</title>
+    <style>
+        h2{
+            margin:auto;
+        }
+        .col{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        .item{
+            padding-top: 10px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            width: 50%;
+        }
+        img{
+            width:120%;
+            max-width: 500px;
+        }
+        form{
+            padding-top:20px;
+            padding-bottom:20px;
+        }
+        p{  
+            font-size:16px;
+            padding-bottom:5px;
+            padding-top:10px;
+        }
+        #mapid {
+            width: 120%;
+            height: 500px;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2 class='text-center'>Predict herring location based on otolith shape</h2>
+    <div class="col">
+        <div class="item">
+            <p>
+                Upload an image of a herring otolith from one of the following regions in Alaska: Douglas Reef, Iniskin Bay, Kayak Island, Kukak Bay, Uganik Bay, Landlocked Bay,
+                Stockdale Harbor and Rocky Bay. The fish's location is then predicted based
+                on the otolith's shape.
+            </p>
+            <p>
+                Some images of otoliths from the sample regions, that were not included in the training data can be found <a href="https://notendur.hi.is/afv6/test_images/" target="_blank">here</a>.
+            </p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="item">
+            {% if img %}
+                    <img src="data:image/jpeg;base64,{{ img }}">
+                    <p>Predicted region: {{pred}}</p>
+                    <div id="mapid"></div>
+            {% endif %}
+
+            <form id="form" action="/" method="post" enctype="multipart/form-data">
+                {% if upload %}
+                    <label class="form-label" for="customFile">Upload image</label>
+                {% endif %}
+                    <input type="file" class="form-control" id="file" name="file" />
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById("file").onchange = function() {
+            document.getElementById("form").submit();
+        }
+    </script>
+    <script>
+        // script for map
+        const center = {{loc}};
+        const map = L.map('mapid').setView(center, 3);
+
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 16,
+            id: 'mapbox/streets-v11',
+            tileSize: 512,
+            zoomOffset: -1,
+            minZoom: 4,
+            accessToken: 'pk.eyJ1IjoiYW5kcmlmcmV5ciIsImEiOiJja2JsMTFxaXUxNGM3MnlwdmppNng0Yjc1In0.a4eBsSZ34l2MkTXprsBz0Q'
+        }).addTo(map);
+        
+
+        const marker = L.marker(center).bindPopup('{{pred}}').addTo(map);
+        marker.openPopup();
+    </script>
+</body>
+</html>
